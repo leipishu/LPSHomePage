@@ -231,6 +231,166 @@ body.playing .wrap {
 }
 
 /* ═══════════════════════════════════════
+   Hero 社交图标行
+   ═══════════════════════════════════════ */
+
+.social-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 2px;
+    animation: heroIn 0.9s 0.15s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition:
+            color 0.2s ease,
+            border-color 0.2s ease,
+            background 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.social-link svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    fill: currentColor;
+}
+
+.social-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--hover-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), 0 0 22px var(--glow2);
+}
+
+.social-link:active {
+    transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════
+   终端状态栏
+   ═══════════════════════════════════════ */
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 16px;
+    background: var(--panel-bar);
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2px;
+    color: var(--dim);
+    flex-shrink: 0;
+    user-select: none;
+    transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+
+.sb-left,
+.sb-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.sb-center {
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--dim);
+    opacity: 0.85;
+}
+
+.sb-sep {
+    color: var(--border);
+    font-size: 10px;
+}
+
+.sb-branch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent);
+}
+
+.sb-branch-icon {
+    font-size: 11px;
+}
+
+.sb-cwd {
+    font-style: italic;
+}
+
+.sb-online {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--accent);
+}
+
+.sb-online-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: sbPulse 2s ease-in-out infinite;
+}
+
+@keyframes sbPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.8); }
+}
+
+#sbTime {
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+}
+
+#sbDate {
+    color: var(--dim);
+}
+
+/* 最小化时隐藏状态栏 */
+.terminal.minimized .status-bar {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   响应式补充
+   ═══════════════════════════════════════ */
+
+@media (max-width: 720px) {
+    .social-link { width: 30px; height: 30px; border-radius: 8px; }
+    .social-link svg { width: 14px; height: 14px; }
+
+    .status-bar { font-size: 10px; padding: 4px 10px; gap: 8px; }
+    .sb-center { display: none; }
+    .sb-online span:not(.sb-online-dot) { display: none; }
+}
+
+/* ═══════════════════════════════════════
    主题栏 + 操作按钮
    ═══════════════════════════════════════ */
 

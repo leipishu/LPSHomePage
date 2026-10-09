@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>leipishu</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
 <canvas id="snake-bg" aria-hidden="true"></canvas>
@@ -22,14 +22,14 @@
             <img class="avatar" id="avatar" alt="avatar">
             <pre class="banner" id="banner"></pre>
             <div class="hero-sign" id="heroSign"></div>
+            <div class="social-row" id="socialRow"></div>
         </div>
 
         <!-- 主题下拉 + 操作按钮 -->
         <div class="theme-bar">
 
-            <!-- 主题下拉框 -->
             <div class="theme-dropdown" id="themeDropdown">
-                <button class="theme-trigger" id="themeTrigger" type="button" aria-haspopup="true">
+                <button class="theme-trigger" id="themeTrigger" type="button" aria-haspopup="true" aria-expanded="false">
                     <span class="trigger-icon" id="triggerIcon"></span>
                     <span class="trigger-label" id="triggerLabel">Theme</span>
                     <span class="trigger-arrow">▾</span>
@@ -37,7 +37,6 @@
                 <div class="theme-menu" id="themeMenu" role="menu"></div>
             </div>
 
-            <!-- 操作按钮 -->
             <div class="action-btns">
                 <button class="action-btn game-btn" id="gameBtn" type="button" title="Play snake">
                     <span class="action-dot game-dot"></span>
@@ -64,6 +63,35 @@
             </div>
 
             <div class="screen" id="screen"></div>
+
+            <!-- 状态栏 -->
+            <div class="status-bar" id="statusBar">
+                <div class="sb-left">
+            <span class="sb-branch">
+              <span class="sb-branch-icon">⎇</span>
+              <span id="sbBranch">main</span>
+            </span>
+                    <span class="sb-sep">│</span>
+                    <span id="sbEncoding">UTF-8</span>
+                    <span class="sb-sep">│</span>
+                    <span id="sbEol">LF</span>
+                    <span class="sb-sep">│</span>
+                    <span id="sbShell">bash</span>
+                </div>
+                <div class="sb-center">
+                    <span class="sb-cwd">~/leipishu</span>
+                </div>
+                <div class="sb-right">
+            <span class="sb-online">
+              <span class="sb-online-dot"></span>
+              <span>online</span>
+            </span>
+                    <span class="sb-sep">│</span>
+                    <span id="sbTime">00:00:00</span>
+                    <span class="sb-sep">│</span>
+                    <span id="sbDate">--- --.--</span>
+                </div>
+            </div>
 
             <div class="footer">
           <span class="badge">

@@ -1,6 +1,7 @@
 {
   "profile": {
     "pageTitle": "leipishu",
+    "favicon": "assets/favicon.svg",
     "username": "LEIPISHU",
     "signature": "@Override",
     "avatar": "assets/leipishu.jpg",
@@ -8,6 +9,12 @@
     "promptUser": "leipishu@localhost",
     "promptPath": "~"
   },
+  "social": [
+    { "id": "github",   "label": "GitHub",   "url": "https://github.com/leipishu" },
+    { "id": "bilibili", "label": "Bilibili", "url": "https://space.bilibili.com/480887323" },
+    { "id": "mail",     "label": "Email",    "url": "mailto:hi@example.com" },
+    { "id": "rss",      "label": "RSS",      "url": "#" }
+  ],
   "banner": [
     "██╗     ███████╗██╗██████╗ ██╗███████╗██╗  ██╗██╗   ██╗",
     "██║     ██╔════╝██║██╔══██╗██║██╔════╝██║  ██║██║   ██║",
@@ -45,6 +52,12 @@
   ],
   "defaultTheme": "github",
   "storageKey": "leipishu-theme",
+  "statusBar": {
+    "branch": "main",
+    "encoding": "UTF-8",
+    "eol": "LF",
+    "shell": "bash"
+  },
   "footer": {
     "license": "MIT License",
     "copyright": "© 2026 LEIPISHU",
