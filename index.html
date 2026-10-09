@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="github">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>leipishu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+<canvas id="snake-bg" aria-hidden="true"></canvas>
+
+<button id="exitGameBtn" class="exit-game-btn" type="button" title="Exit game (ESC)">
+    <span class="esc-key">ESC</span>
+</button>
+
+<div class="wrap">
+    <div class="layout">
+
+        <!-- Hero -->
+        <div class="hero">
+            <img class="avatar" id="avatar" alt="avatar">
+            <pre class="banner" id="banner"></pre>
+            <div class="hero-sign" id="heroSign"></div>
+        </div>
+
+        <!-- 主题下拉 + 操作按钮 -->
+        <div class="theme-bar">
+
+            <!-- 主题下拉框 -->
+            <div class="theme-dropdown" id="themeDropdown">
+                <button class="theme-trigger" id="themeTrigger" type="button" aria-haspopup="true">
+                    <span class="trigger-icon" id="triggerIcon"></span>
+                    <span class="trigger-label" id="triggerLabel">Theme</span>
+                    <span class="trigger-arrow">▾</span>
+                </button>
+                <div class="theme-menu" id="themeMenu" role="menu"></div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="action-btns">
+                <button class="action-btn game-btn" id="gameBtn" type="button" title="Play snake">
+                    <span class="action-dot game-dot"></span>
+                    <span class="action-label">Play</span>
+                </button>
+                <button class="action-btn min-btn" id="minBtn" type="button" title="Minimize / Restore">
+                    <span class="action-dot min-dot"></span>
+                    <span class="action-label">Minimize</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- 终端框 -->
+        <div class="terminal" id="terminal">
+            <div class="titlebar" id="titlebar">
+                <div class="dots">
+                    <span class="dot r" title="Close"></span>
+                    <span class="dot y" id="yellowDot" title="Minimize"></span>
+                    <span class="dot g" title="Zoom"></span>
+                </div>
+                <div class="title" id="winTitle"></div>
+                <div class="title-spacer"></div>
+            </div>
+
+            <div class="screen" id="screen"></div>
+
+            <div class="footer">
+          <span class="badge">
+            <span class="dot-mini"></span>
+            <span id="footerLicense"></span>
+          </span>
+                <span class="hide-mobile" id="footerCopyright"></span>
+                <span class="spacer"></span>
+                <a id="footerLink" href="#" target="_blank" rel="noopener"></a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

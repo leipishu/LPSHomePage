@@ -1,0 +1,143 @@
+{
+  "profile": {
+    "pageTitle": "leipishu",
+    "username": "LEIPISHU",
+    "signature": "@Override",
+    "avatar": "assets/leipishu.jpg",
+    "windowTitle": "leipishu@localhost: ~ — bash — 80×24",
+    "promptUser": "leipishu@localhost",
+    "promptPath": "~"
+  },
+  "banner": [
+    "██╗     ███████╗██╗██████╗ ██╗███████╗██╗  ██╗██╗   ██╗",
+    "██║     ██╔════╝██║██╔══██╗██║██╔════╝██║  ██║██║   ██║",
+    "██║     █████╗  ██║██████╔╝██║███████╗███████║██║   ██║",
+    "██║     ██╔══╝  ██║██╔═══╝ ██║╚════██║██╔══██║██║   ██║",
+    "███████╗███████╗██║██║     ██║███████║██║  ██║╚██████╔╝",
+    "╚══════╝╚══════╝╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ "
+  ],
+  "snake": {
+    "enabled": true,
+    "opacity": 0.55,
+    "speed": 130,
+    "maxLength": 60,
+    "player": {
+      "speed": 95
+    }
+  },
+  "links": [
+    { "name": "github",   "url": "https://github.com/leipishu",       "desc": "repositories" },
+    { "name": "bilibili", "url": "https://space.bilibili.com/480887323", "desc": "videos" },
+    { "name": "mcserver",  "url": "https://server.leipishu.com",      "desc": "minecraft server" },
+    { "name": "modrinth",    "url": "https://modrinth.com/user/leipishu",    "desc": "modrinth profile" },
+    { "name": "curseforge",     "url": "https://www.curseforge.com/members/leipishu/projects",    "desc": "curseforge profile" },
+    { "name": "mcmod",     "url": "https://www.mcmod.cn/author/42812.html",    "desc": "mcmod profile" }
+  ],
+  "themes": [
+    { "id": "github",    "name": "GitHub",    "swatch": "linear-gradient(135deg,#7ee787,#58a6ff)" },
+    { "id": "dracula",   "name": "Dracula",   "swatch": "linear-gradient(135deg,#bd93f9,#50fa7b)" },
+    { "id": "nord",      "name": "Nord",      "swatch": "linear-gradient(135deg,#88c0d0,#a3be8c)" },
+    { "id": "gruvbox",   "name": "Gruvbox",   "swatch": "linear-gradient(135deg,#b8bb26,#83a598)" },
+    { "id": "matrix",    "name": "Matrix",    "swatch": "linear-gradient(135deg,#00ff6a,#00a844)" },
+    { "id": "cyberpunk", "name": "Cyberpunk", "swatch": "linear-gradient(135deg,#ff2e97,#00e5ff)" },
+    { "id": "tokyo",     "name": "Tokyo",     "swatch": "linear-gradient(135deg,#7aa2f7,#9ece6a)" },
+    { "id": "solarized", "name": "Solarized", "swatch": "linear-gradient(135deg,#268bd2,#859900)" }
+  ],
+  "defaultTheme": "github",
+  "storageKey": "leipishu-theme",
+  "footer": {
+    "license": "MIT License",
+    "copyright": "© 2026 LEIPISHU",
+    "linkText": "View License ↗",
+    "linkUrl": "https://opensource.org/licenses/MIT"
+  },
+  "intro": {
+    "enabled": true,
+    "startDelay": 500,
+    "lineDelay": [100, 170],
+    "commandDelay": [340, 520],
+    "lines": [
+      { "type": "output", "text": "Last login: Fri Oct 09 2026 on ttys001" },
+      { "type": "blank" },
+      { "type": "command", "text": "whoami" },
+      { "type": "placeholder", "placeholder": "username", "cls": "brand" },
+      { "type": "blank" },
+      { "type": "command", "text": "cat ~/.signature" },
+      { "type": "placeholder", "placeholder": "signature", "cls": "sign" },
+      { "type": "blank" },
+      { "type": "command", "text": "ls -la ~/links" },
+      { "type": "output", "text": "total {linksCount}" },
+      { "type": "links" },
+      { "type": "blank" },
+      { "type": "output", "text": "Type help for commands, or theme for color schemes." },
+      { "type": "blank" }
+    ]
+  },
+  "text": {
+    "helpHeader": "Available commands:",
+    "aliasesLine": "Aliases: ls → links · sig → signature · ? → help · cls → clear · play/snake → game",
+    "shortcutsLine": "Shortcuts: ↑/↓ history · Tab complete · Ctrl+L clear",
+    "commandNotFound": "command not found: {cmd}",
+    "typeHelpHint": "Type help to see available commands.",
+    "themeNotFound": "theme not found: {id}",
+    "themeSwitched": "Theme switched to {id}",
+    "themeUsage": "Usage: theme <name>",
+    "themeListHeader": "Available themes:",
+    "welcomeLine1": "Last login: Fri Oct 09 2026 on ttys001",
+    "welcomeLine2": "Type help to list available commands.",
+    "welcomeLine3": "Type theme to list all color themes.",
+    "sudoPrompt": "[sudo] password for leipishu:",
+    "sudoFail": "Sorry, user leipishu is not in the sudoers file. This incident will be reported.",
+    "exitMsg": "Connection to localhost closed.",
+    "licenseLine1": "MIT License — © 2026 {username}",
+    "licenseLine2": "Permission is hereby granted, free of charge, to any person obtaining",
+    "licenseLine3": "a copy of this software to deal in the Software without restriction.",
+    "licenseLine4": "Full text: https://opensource.org/licenses/MIT",
+    "gameStarting": "Entering game mode...",
+    "gameHelp": "WASD / arrows to move · SPACE pause · ESC exit · R restart"
+  },
+  "commands": {
+    "help":      "Show available commands",
+    "whoami":    "Print current user",
+    "signature": "Print personal signature",
+    "links":     "List all links",
+    "banner":    "Print the ASCII banner",
+    "welcome":   "Show the welcome message",
+    "theme":     "Switch color theme: theme <name>",
+    "game":      "Play the snake game",
+    "about":     "About this page",
+    "contact":   "Show contact info",
+    "date":      "Show current date and time",
+    "echo":      "Echo input text",
+    "neofetch":  "Display system information",
+    "license":   "Show open-source license",
+    "clear":     "Clear the screen",
+    "sudo":      "Try it",
+    "exit":      "Try it"
+  },
+  "aliases": {
+    "ls":    "links",
+    "?":     "help",
+    "sig":   "signature",
+    "info":  "neofetch",
+    "cls":   "clear",
+    "man":   "help",
+    "play":  "game",
+    "snake": "game"
+  },
+  "about": {
+    "lines": [
+      "A terminal-style personal homepage.",
+      "Built with vanilla HTML, CSS and JavaScript — zero dependencies."
+    ]
+  },
+  "contact": [
+    { "label": "mail",   "value": "hi@example.com" },
+    { "label": "github", "value": "github.com/leipishu" }
+  ],
+  "neofetch": {
+    "os": "LEIPISHU OS 1.0",
+    "shell": "/bin/bash",
+    "terminal": "leipishu-term"
+  }
+}
