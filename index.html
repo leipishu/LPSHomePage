@@ -8,6 +8,22 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<!-- ═══ Loading 遮罩 ═══ -->
+<div id="loading" class="loading">
+    <div class="loading-box">
+        <div class="loading-cursor">&gt;_</div>
+        <div class="loading-label">INITIALIZING</div>
+        <div class="loading-bar">
+            <span class="loading-fill"></span>
+        </div>
+        <div class="loading-info">
+            <span class="loading-status">booting...</span>
+            <span class="loading-percent">0%</span>
+        </div>
+    </div>
+</div>
+
 <canvas id="snake-bg" aria-hidden="true"></canvas>
 
 <button id="exitGameBtn" class="exit-game-btn" type="button" title="Exit game (ESC)">
@@ -67,10 +83,10 @@
             <!-- 状态栏 -->
             <div class="status-bar" id="statusBar">
                 <div class="sb-left">
-            <span class="sb-branch">
-              <span class="sb-branch-icon">⎇</span>
-              <span id="sbBranch">main</span>
-            </span>
+                    <span class="sb-branch">
+                        <span class="sb-branch-icon">⎇</span>
+                        <span id="sbBranch">main</span>
+                    </span>
                     <span class="sb-sep">│</span>
                     <span id="sbEncoding">UTF-8</span>
                     <span class="sb-sep">│</span>
@@ -82,10 +98,10 @@
                     <span class="sb-cwd">~/leipishu</span>
                 </div>
                 <div class="sb-right">
-            <span class="sb-online">
-              <span class="sb-online-dot"></span>
-              <span>online</span>
-            </span>
+                    <span class="sb-online">
+                        <span class="sb-online-dot"></span>
+                        <span>online</span>
+                    </span>
                     <span class="sb-sep">│</span>
                     <span id="sbTime">00:00:00</span>
                     <span class="sb-sep">│</span>
@@ -94,10 +110,10 @@
             </div>
 
             <div class="footer">
-          <span class="badge">
-            <span class="dot-mini"></span>
-            <span id="footerLicense"></span>
-          </span>
+                <span class="badge">
+                    <span class="dot-mini"></span>
+                    <span id="footerLicense"></span>
+                </span>
                 <span class="hide-mobile" id="footerCopyright"></span>
                 <span class="spacer"></span>
                 <a id="footerLink" href="#" target="_blank" rel="noopener"></a>

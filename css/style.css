@@ -130,6 +130,151 @@ body::after {
 }
 
 /* ═══════════════════════════════════════
+   Loading 遮罩
+   ═══════════════════════════════════════ */
+
+.loading {
+    position: fixed;
+    inset: 0;
+    z-index: 40;                       /* 在扫描线(50)之下，让 loading 也带 CRT 效果 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    transition:
+            opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loading.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+            radial-gradient(ellipse 50% 40% at 50% 50%, var(--glow),  transparent 70%),
+            radial-gradient(ellipse 60% 50% at 50% 110%, var(--glow2), transparent 70%);
+    pointer-events: none;
+}
+
+.loading-box {
+    position: relative;
+    width: min(320px, 78vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.5),
+            0 24px 60px rgba(0, 0, 0, 0.6),
+            var(--shadow);
+    animation: loadingBoxIn 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes loadingBoxIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.loading-cursor {
+    font-family: var(--mono);
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px var(--accent), 0 0 40px var(--glow2);
+    animation: loadingBlink 1.1s steps(1, end) infinite;
+}
+
+@keyframes loadingBlink {
+    0%, 50%      { opacity: 1; }
+    50.01%, 100% { opacity: 0.22; }
+}
+
+.loading-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--muted);
+}
+
+.loading-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--link));
+    box-shadow: 0 0 12px var(--accent);
+    border-radius: 2px;
+    transition: width 0.35s cubic-bezier(0.2, 0.8, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.loading-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            transparent 100%
+    );
+    animation: loadingShimmer 1.4s linear infinite;
+}
+
+@keyframes loadingShimmer {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+}
+
+.loading-info {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--dim);
+    letter-spacing: 0.3px;
+    gap: 8px;
+}
+
+.loading-status {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.loading-percent {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
    布局
    ═══════════════════════════════════════ */
 
