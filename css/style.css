@@ -626,11 +626,18 @@ body.playing .wrap {
     padding: 2px 0;
 }
 
-/* ── 主题下拉框 ── */
+/* ── 主题下拉框 ──
+   普通状态被终端压住（终端 z-index:20 > 此处 5）；
+   仅当 .open 时才临时抬到终端之上。
+─────────────────────────────────────── */
 .theme-dropdown {
     position: relative;
     display: inline-flex;
-    z-index: 30;
+    z-index: 5;
+}
+
+.theme-dropdown.open {
+    z-index: 200;
 }
 
 .theme-trigger {
@@ -889,6 +896,26 @@ body.playing .wrap {
     box-shadow: 0 0 14px var(--accent);
 }
 
+/* ── 归位按钮 ── */
+.reset-btn {
+    border-color: rgba(88, 166, 255, 0.32);
+    color: #58a6ff;
+}
+.reset-btn .reset-dot {
+    background: #58a6ff;
+    box-shadow:
+            0 0 10px rgba(88, 166, 255, 0.65),
+            0 0 22px rgba(88, 166, 255, 0.35);
+}
+.reset-btn:hover {
+    border-color: #58a6ff;
+    background: rgba(88, 166, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(88, 166, 255, 0.18);
+}
+.reset-btn:hover .reset-dot { transform: scale(1.1); }
+.reset-btn:active { transform: translateY(0); }
+
 /* ═══════════════════════════════════════
    游戏退出按钮
    ═══════════════════════════════════════ */
@@ -937,6 +964,8 @@ body.playing .exit-game-btn {
    ═══════════════════════════════════════ */
 
 .terminal {
+    position: relative;
+    z-index: 20;
     flex: 1;
     min-height: 200px;
     display: flex;
@@ -951,6 +980,8 @@ body.playing .exit-game-btn {
     overflow: hidden;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    will-change: transform;
+    transform: translate(0, 0);
     transition:
             min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
             max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
@@ -964,6 +995,16 @@ body.playing .exit-game-btn {
             0 0 0 1px rgba(0, 0, 0, 0.55),
             0 20px 60px rgba(0, 0, 0, 0.7),
             0 0 110px var(--glow);
+}
+
+/* 拖拽中：终端提到最上层，压住一切 */
+.terminal.dragging {
+    z-index: 300;
+    transition: none;
+    box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.65),
+            0 30px 90px rgba(0, 0, 0, 0.85),
+            0 0 140px var(--glow);
 }
 
 .terminal.minimized {
@@ -991,8 +1032,11 @@ body.playing .exit-game-btn {
     border-bottom: 1px solid var(--border);
     user-select: none;
     flex-shrink: 0;
+    cursor: grab;
     transition: background 0.4s ease, border-color 0.4s ease;
 }
+.terminal.dragging .titlebar { cursor: grabbing; }
+
 .dots { display: flex; gap: 7px; flex-shrink: 0; }
 .dot {
     width: 12px;
@@ -1023,6 +1067,7 @@ body.playing .exit-game-btn {
 .title-spacer { width: 46px; flex-shrink: 0; }
 
 .screen {
+    position: relative;
     flex: 1;
     min-height: 0;
     padding: 18px 22px 22px;
@@ -1125,6 +1170,19 @@ body.playing .exit-game-btn {
     padding: 0;
     margin: 0;
     caret-color: var(--accent);
+}
+
+/* ═══════════════════════════════════════
+   Matrix 彩蛋浮层
+   ═══════════════════════════════════════ */
+
+.matrix-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 10;
+    display: block;
 }
 
 /* ═══════════════════════════════════════
@@ -1299,6 +1357,66 @@ body.playing .exit-game-btn {
 }
 
 /* ═══════════════════════════════════════
+   虚拟方向键（移动端贪吃蛇）
+   ═══════════════════════════════════════ */
+
+.dpad {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 168px;
+    height: 168px;
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+    z-index: 110;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.dpad.active {
+    display: grid;
+}
+
+.dpad-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    outline: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(0.92);
+}
+
+.dpad-up    { grid-column: 2; grid-row: 1; }
+.dpad-left  { grid-column: 1; grid-row: 2; }
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down  { grid-column: 2; grid-row: 3; }
+
+/* 鼠标精确指针设备：不显示 dpad（即使激活） */
+@media (hover: hover) and (pointer: fine) {
+    .dpad.active { display: none; }
+}
+
+/* ═══════════════════════════════════════
    响应式
    ═══════════════════════════════════════ */
 
@@ -1361,4 +1479,14 @@ body.playing .exit-game-btn {
 
     .loading-box { padding: 22px 18px; gap: 12px; }
     .loading-cursor { font-size: 28px; }
+
+    /* 移动端 dpad 尺寸 */
+    .dpad {
+        width: 150px;
+        height: 150px;
+        right: 12px;
+        bottom: 12px;
+        gap: 5px;
+    }
+    .dpad-btn { font-size: 16px; border-radius: 9px; }
 }

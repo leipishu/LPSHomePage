@@ -30,6 +30,9 @@
     <span class="esc-key">ESC</span>
 </button>
 
+<!-- 移动端虚拟方向键（仅玩家模式 + 触屏设备显示） -->
+<div id="dpad" class="dpad" aria-hidden="true"></div>
+
 <div class="wrap">
     <div class="layout">
 
@@ -61,6 +64,10 @@
                 <button class="action-btn min-btn" id="minBtn" type="button" title="Minimize / Restore">
                     <span class="action-dot min-dot"></span>
                     <span class="action-label">Minimize</span>
+                </button>
+                <button class="action-btn reset-btn" id="resetPosBtn" type="button" title="Reset window position">
+                    <span class="action-dot reset-dot"></span>
+                    <span class="action-label">Reset</span>
                 </button>
             </div>
 

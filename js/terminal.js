@@ -8,6 +8,10 @@ let getCommandNamesCallback = null;
 const history = [];
 let historyIdx = 0;
 
+/* 粘性滚动：用户主动上滚时不打扰 */
+let sticky = true;
+const STICKY_THRESHOLD = 24;
+
 /** 初始化终端，绑定屏幕元素和命令执行回调 */
 export function initTerminal({ screen, onCommand, getCommandNames }) {
     screenEl = screen;
@@ -18,6 +22,11 @@ export function initTerminal({ screen, onCommand, getCommandNames }) {
         if (e.target.closest && e.target.closest('a')) return;
         focusInput();
     });
+
+    screenEl.addEventListener('scroll', function () {
+        const dist = screenEl.scrollHeight - screenEl.scrollTop - screenEl.clientHeight;
+        sticky = dist < STICKY_THRESHOLD;
+    }, { passive: true });
 }
 
 /** 生成提示符 HTML */
@@ -31,8 +40,16 @@ export function promptHTML() {
         '</span>';
 }
 
-export function scrollBottom() {
-    if (screenEl) screenEl.scrollTop = screenEl.scrollHeight;
+/**
+ * 滚动到底部。
+ * @param {boolean} [force] 为 true 时无视粘性状态强制滚动（用于用户主动操作）
+ */
+export function scrollBottom(force) {
+    if (!screenEl) return;
+    if (force || sticky) {
+        screenEl.scrollTop = screenEl.scrollHeight;
+        sticky = true;
+    }
 }
 
 /** 输出一行 HTML */
@@ -45,13 +62,44 @@ export function print(html) {
     return d;
 }
 
+/**
+ * 在当前输入行之前插入一行 HTML。
+ * 异步命令（如 weather）的输出会落在用户敲下的命令下方、输入框上方，
+ * 而不是跑到最新输入框的下方。
+ */
+export function printBeforeInput(html) {
+    const d = document.createElement('div');
+    d.className = 'line';
+    d.innerHTML = (html === undefined || html === null || html === '') ? '&nbsp;' : html;
+
+    if (inputEl && inputEl.parentNode && inputEl.parentNode.parentNode === screenEl) {
+        screenEl.insertBefore(d, inputEl.parentNode);
+    } else {
+        screenEl.appendChild(d);
+    }
+
+    scrollBottom();
+    return d;
+}
+
 /** 清空屏幕 */
 export function clearScreen() {
     if (screenEl) screenEl.innerHTML = '';
+    sticky = true;
 }
 
 export function focusInput() {
     if (inputEl) inputEl.focus();
+}
+
+/** 暴露终端屏幕元素（供 matrix 等命令使用） */
+export function getScreenEl() {
+    return screenEl;
+}
+
+/** 获取历史命令副本 */
+export function getHistory() {
+    return history.slice();
 }
 
 function addInputLine() {
@@ -62,7 +110,7 @@ function addInputLine() {
     screenEl.appendChild(line);
     inputEl = line.querySelector('input');
     inputEl.addEventListener('keydown', onKeyDown);
-    scrollBottom();
+    scrollBottom(true);
 }
 
 /** 显示输入行并聚焦 */
@@ -80,6 +128,7 @@ function submit(value) {
 
     addInputLine();
     focusInput();
+    scrollBottom(true);
 }
 
 function onKeyDown(e) {

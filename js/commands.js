@@ -49,7 +49,21 @@ export function execute(input) {
         return;
     }
 
-    fn(args);
+    try {
+        const result = fn(args);
+        // 异步命令错误捕获
+        if (result && typeof result.catch === 'function') {
+            result.catch(function (err) {
+                term.printBeforeInput('<span class="out">error: ' +
+                    escapeHTML(err && err.message ? err.message : String(err)) +
+                    '</span>');
+            });
+        }
+    } catch (err) {
+        term.printBeforeInput('<span class="out">error: ' +
+            escapeHTML(err && err.message ? err.message : String(err)) +
+            '</span>');
+    }
 }
 
 /* ─────────── 工具 ─────────── */
@@ -74,13 +88,129 @@ function printBanner() {
     d.appendChild(pre);
     term.print('');
     document.getElementById('screen').appendChild(d);
-    term.scrollBottom();
+    term.scrollBottom(true);
 }
 
 function printLinks() {
     const cfg = getConfig();
     term.print('<span class="out">total ' + cfg.links.length + '</span>');
     cfg.links.forEach(function (item) { term.print(linkHTML(item)); });
+}
+
+/* ─────────── 新命令：history / matrix / weather ─────────── */
+
+function cmdHistory() {
+    const list = term.getHistory();
+    if (!list.length) {
+        term.print('<span class="out">(no history)</span>');
+        return;
+    }
+    list.forEach(function (c, i) {
+        term.print('  <span class="prompt-path">' + String(i + 1).padStart(4, ' ') + '</span>  ' +
+            '<span class="out">' + escapeHTML(c) + '</span>');
+    });
+}
+
+function cmdMatrix() {
+    const screen = term.getScreenEl();
+    if (!screen) return;
+    if (screen.querySelector('.matrix-overlay')) return;
+
+    term.print('<span class="out">Wake up, Neo...</span>');
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'matrix-overlay';
+
+    const rect = screen.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+
+    screen.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const fontSize = 14;
+    const cols = Math.max(1, Math.floor(rect.width / fontSize));
+    const drops = new Array(cols).fill(1);
+
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ0123456789';
+    const maxFrames = 300; // ≈5 秒
+    let frame = 0;
+
+    function draw() {
+        if (!canvas.parentNode) return;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+        ctx.fillRect(0, 0, rect.width, rect.height);
+
+        ctx.fillStyle = '#00ff6a';
+        ctx.font = 'bold ' + fontSize + 'px ui-monospace, "SF Mono", monospace';
+        ctx.textBaseline = 'top';
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            if (drops[i] * fontSize > rect.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+
+        frame++;
+        if (frame < maxFrames) {
+            requestAnimationFrame(draw);
+        } else {
+            canvas.style.transition = 'opacity 0.6s ease';
+            canvas.style.opacity = '0';
+            setTimeout(function () {
+                if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+            }, 700);
+        }
+    }
+    draw();
+}
+
+function cmdWeather(args) {
+    const city = (args.join(' ') || '').trim();
+
+    term.printBeforeInput('<span class="out">Fetching weather' +
+        (city ? ' for ' + escapeHTML(city) : '') + ' ...</span>');
+
+    // wttr.in 免费、无需 key，返回 JSON
+    const url = 'https://wttr.in/' + encodeURIComponent(city) + '?format=j1';
+
+    return fetch(url, { cache: 'no-cache' })
+        .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
+        .then(function (data) {
+            const cur = data.current_condition && data.current_condition[0];
+            const area = data.nearest_area && data.nearest_area[0];
+            if (!cur || !area) throw new Error('unexpected response');
+
+            const place =
+                (area.areaName && area.areaName[0] && area.areaName[0].value || '') +
+                ', ' +
+                (area.country && area.country[0] && area.country[0].value || '');
+
+            term.printBeforeInput('');
+            term.printBeforeInput('<span class="prompt-path">Location</span>   <span class="out">' + escapeHTML(place) + '</span>');
+            term.printBeforeInput('<span class="prompt-path">Temp</span>       <span class="out">' +
+                escapeHTML(cur.temp_C) + '°C (feels ' + escapeHTML(cur.FeelsLikeC) + '°C)</span>');
+            term.printBeforeInput('<span class="prompt-path">Weather</span>    <span class="out">' +
+                escapeHTML(cur.weatherDesc && cur.weatherDesc[0] ? cur.weatherDesc[0].value : '') + '</span>');
+            term.printBeforeInput('<span class="prompt-path">Humidity</span>   <span class="out">' +
+                escapeHTML(cur.humidity) + '%</span>');
+            term.printBeforeInput('<span class="prompt-path">Wind</span>       <span class="out">' +
+                escapeHTML(cur.windspeedKmph) + ' km/h</span>');
+            term.printBeforeInput('');
+        });
 }
 
 /* ─────────── 注册所有默认命令 ─────────── */
@@ -226,6 +356,12 @@ export function registerDefaultCommands() {
     register('exit', function () {
         term.print('<span class="out">' + getConfig().text.exitMsg + '</span>');
     });
+
+    /* ─────────── 新增命令 ─────────── */
+
+    register('history', cmdHistory);
+    register('matrix', cmdMatrix);
+    register('weather', cmdWeather);
 
     /* 别名 */
     const aliases = cfg.aliases || {};

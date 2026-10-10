@@ -31,14 +31,24 @@ let score = 0;
 let highScore = 0;
 let onModeChangeCallback = null;
 
+/* 触摸滑动起点 */
+let touchStartX = 0;
+let touchStartY = 0;
+let touchActive = false;
+
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const HIGH_SCORE_KEY = 'leipishu-snake-highscore';
+const SWIPE_MIN = 24; // 最小滑动距离（px）
 
 /* ═══════════ 工具 ═══════════ */
 
 function randInt(n) { return Math.floor(Math.random() * n); }
 function keyOf(x, y) { return x + ',' + y; }
 function isPlayerMode() { return mode !== 'ai'; }
+
+function isTouchDevice() {
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+}
 
 function loadHighScore() {
     try {
@@ -160,6 +170,13 @@ function decide() {
 
 /* ═══════════ 输入缓冲 ═══════════ */
 
+function pushDir(nd) {
+    if (!nd) return;
+    if (nd[0] === -dir[0] && nd[1] === -dir[1]) return;
+    if (nd[0] === dir[0] && nd[1] === dir[1]) return;
+    if (pendingDirs.length < 2) pendingDirs.push(nd);
+}
+
 function consumePendingDirs() {
     while (pendingDirs.length > 0) {
         const nd = pendingDirs.shift();
@@ -265,10 +282,6 @@ function roundRect(x, y, w, h, r) {
     ctx.closePath();
 }
 
-/**
- * 画一个胶囊卡片，右对齐到 rightX。
- * @returns {number} 卡片宽度
- */
 function drawPill(text, rightX, y, options) {
     ctx.font = 'bold 11px ui-monospace, "SF Mono", "JetBrains Mono", monospace';
 
@@ -278,24 +291,20 @@ function drawPill(text, rightX, y, options) {
     const h = 20;
     const x = rightX - w;
 
-    // 背景
     ctx.fillStyle = options.bg;
     roundRect(x, y, w, h, 5);
     ctx.fill();
 
-    // 边框
     ctx.strokeStyle = options.border;
     ctx.lineWidth = 1;
     roundRect(x + 0.5, y + 0.5, w - 1, h - 1, 5);
     ctx.stroke();
 
-    // 文字
     ctx.fillStyle = options.color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x + w / 2, y + h / 2);
 
-    // 复位
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
@@ -322,9 +331,6 @@ function drawGrid(player) {
 function drawHUD() {
     const pad = 26;
 
-    /* ══════════════════════════════════════
-       左上：SCORE / LENGTH
-       ══════════════════════════════════════ */
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
 
@@ -354,10 +360,6 @@ function drawHUD() {
     ctx.fillText(String(snake.length), pad, pad + 94);
     ctx.shadowBlur = 0;
 
-    /* ══════════════════════════════════════
-       右下：操作提示（卡片式）
-       放在右下角，避免与右上角的 ESC 退出按钮重叠
-       ══════════════════════════════════════ */
     const hints = [
         { keys: ['WASD', '↑↓←→'], label: 'move' },
         { keys: ['SPACE'],        label: 'pause' },
@@ -367,18 +369,16 @@ function drawHUD() {
 
     const rowH = 26;
     const rightX = W - pad;
-    const hintBlockH = hints.length * rowH;   // 4 * 26 = 104
+    const hintBlockH = hints.length * rowH;
     const bestH = 26;
     const totalH = hintBlockH + bestH;
 
-    // 让整块紧贴屏幕底部，留出 pad 边距
     let y = H - pad - totalH;
 
     for (let i = 0; i < hints.length; i++) {
         const row = hints[i];
         let cursor = rightX;
 
-        // 说明卡片（最右）
         const lw = drawPill(row.label, cursor, y, {
             bg: 'rgba(255,255,255,0.035)',
             border: 'rgba(255,255,255,0.08)',
@@ -386,7 +386,6 @@ function drawHUD() {
         });
         cursor -= lw + 6;
 
-        // 键位卡片（从右往左依次排）
         for (let j = row.keys.length - 1; j >= 0; j--) {
             const kw = drawPill(row.keys[j], cursor, y, {
                 bg: 'rgba(255,255,255,0.075)',
@@ -399,7 +398,6 @@ function drawHUD() {
         y += rowH;
     }
 
-    // BEST（在提示块正下方）
     ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
     ctx.font = 'bold 12px ui-monospace, "SF Mono", monospace';
@@ -408,9 +406,6 @@ function drawHUD() {
     ctx.fillText('BEST  ' + highScore, rightX, y + 4);
     ctx.globalAlpha = 1;
 
-    /* ══════════════════════════════════════
-       暂停 / 结束浮层
-       ══════════════════════════════════════ */
     if (mode === 'paused') {
         drawOverlay('PAUSED', 'Press SPACE to resume', colors.body);
     } else if (mode === 'gameover') {
@@ -421,7 +416,6 @@ function drawHUD() {
         );
     }
 
-    // 复位
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 }
@@ -460,7 +454,6 @@ function draw() {
 
     drawGrid(player);
 
-    // 食物
     const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 500);
     ctx.fillStyle = colors.food;
     ctx.globalAlpha = player
@@ -472,7 +465,6 @@ function draw() {
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // 蛇身
     const n = snake.length;
     const headAlpha = player ? 1.0 : 0.55;
     const tailAlpha = player ? 0.55 : 0.16;
@@ -524,17 +516,31 @@ function refreshColors() {
     colors.dim  = s.getPropertyValue('--dim').trim()   || '#6e7681';
 }
 
+function updateDpadVisibility() {
+    const dpad = document.getElementById('dpad');
+    if (!dpad) return;
+    if (isPlayerMode() && isTouchDevice()) {
+        dpad.classList.add('active');
+    } else {
+        dpad.classList.remove('active');
+    }
+}
+
 function updateCanvasLayer() {
     if (!canvas) return;
     if (isPlayerMode()) {
         canvas.style.opacity = '1';
         canvas.style.zIndex = '100';
+        // 玩家模式：canvas 接收指针（用于触摸滑动）
+        canvas.style.pointerEvents = 'auto';
         document.body.classList.add('playing');
     } else {
         canvas.style.opacity = String(canvasOpacity);
         canvas.style.zIndex = '';
+        canvas.style.pointerEvents = 'none';
         document.body.classList.remove('playing');
     }
+    updateDpadVisibility();
 }
 
 function notifyModeChange() {
@@ -626,8 +632,81 @@ function onKeyDown(e) {
 
     if (nd) {
         e.preventDefault();
-        if (pendingDirs.length < 2) pendingDirs.push(nd);
+        pushDir(nd);
     }
+}
+
+/* ═══════════ 触摸滑动 ═══════════ */
+
+function onTouchStart(e) {
+    if (!isPlayerMode()) return;
+    if (mode !== 'player') return;
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchActive = true;
+}
+
+function onTouchMove(e) {
+    // 阻止玩家模式下页面被拖动
+    if (!isPlayerMode()) return;
+    if (e.cancelable) e.preventDefault();
+}
+
+function onTouchEnd(e) {
+    if (!isPlayerMode() || !touchActive) return;
+    touchActive = false;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+
+    if (Math.abs(dx) < SWIPE_MIN && Math.abs(dy) < SWIPE_MIN) return;
+
+    let nd;
+    if (Math.abs(dx) > Math.abs(dy)) {
+        nd = dx > 0 ? [1, 0] : [-1, 0];
+    } else {
+        nd = dy > 0 ? [0, 1] : [0, -1];
+    }
+    pushDir(nd);
+}
+
+/* ═══════════ 虚拟方向键 ═══════════ */
+
+function initDpad() {
+    const dpad = document.getElementById('dpad');
+    if (!dpad) return;
+    if (dpad.dataset.ready === '1') return;
+    dpad.dataset.ready = '1';
+
+    const buttons = [
+        { dir: [0, -1], cls: 'up',    label: '▲' },
+        { dir: [-1, 0], cls: 'left',  label: '◀' },
+        { dir: [1, 0],  cls: 'right', label: '▶' },
+        { dir: [0, 1],  cls: 'down',  label: '▼' }
+    ];
+
+    buttons.forEach(function (b) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'dpad-btn dpad-' + b.cls;
+        btn.setAttribute('aria-label', b.cls);
+        btn.textContent = b.label;
+
+        function fire(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (mode !== 'player') return;
+            pushDir(b.dir);
+            btn.classList.add('pressed');
+            setTimeout(function () { btn.classList.remove('pressed'); }, 120);
+        }
+
+        btn.addEventListener('touchstart', fire, { passive: false });
+        btn.addEventListener('mousedown', fire);
+        dpad.appendChild(btn);
+    });
 }
 
 /* ═══════════ 初始化 ═══════════ */
@@ -650,6 +729,7 @@ export function initSnake() {
 
     currentTickMs = aiTickMs;
     canvas.style.opacity = String(canvasOpacity);
+    canvas.style.pointerEvents = 'none';
 
     highScore = loadHighScore();
 
@@ -665,6 +745,15 @@ export function initSnake() {
     requestAnimationFrame(loop);
 
     document.addEventListener('keydown', onKeyDown);
+
+    // 触摸滑动（绑定到 document 级，避免 canvas pointer-events 干扰）
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', function () { touchActive = false; }, { passive: true });
+
+    // 虚拟方向键
+    initDpad();
 
     let rt = null;
     window.addEventListener('resize', function () {

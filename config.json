@@ -126,7 +126,10 @@
     "license":   "Show open-source license",
     "clear":     "Clear the screen",
     "sudo":      "Try it",
-    "exit":      "Try it"
+    "exit":      "Try it",
+    "history":   "Show command history",
+    "matrix":    "Enter the matrix",
+    "weather":   "Show weather: weather [city]"
   },
   "aliases": {
     "ls":    "links",
@@ -136,7 +139,10 @@
     "cls":   "clear",
     "man":   "help",
     "play":  "game",
-    "snake": "game"
+    "snake": "game",
+    "hist":  "history",
+    "neo":   "matrix",
+    "w":     "weather"
   },
   "about": {
     "lines": [

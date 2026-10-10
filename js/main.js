@@ -41,7 +41,7 @@ async function hideLoading() {
     setLoading(100, 'ready');
     await sleep(280);
     loadingEl.classList.add('hidden');
-    await sleep(520);  // 等淡出动画结束
+    await sleep(520);
 }
 
 function preloadImage(src) {
@@ -148,6 +148,85 @@ function initMinimize() {
     }
 }
 
+/* ══════════ 终端窗口拖拽 ══════════ */
+
+/* 拖拽偏移量提取到模块级，方便归位按钮复位 */
+const dragOffset = { x: 0, y: 0 };
+
+/** 让终端窗口回到初始位置 */
+export function resetTerminalPos() {
+    const terminal = document.getElementById('terminal');
+    if (!terminal) return;
+    if (!dragOffset.x && !dragOffset.y) return;
+
+    dragOffset.x = 0;
+    dragOffset.y = 0;
+
+    terminal.style.transition = 'transform 0.4s cubic-bezier(0.2, 0.8, 0.3, 1)';
+    terminal.style.transform = '';
+    setTimeout(function () {
+        terminal.style.transition = '';
+    }, 420);
+}
+
+function initWindowDrag() {
+    const terminal = document.getElementById('terminal');
+    const titlebar = document.getElementById('titlebar');
+    if (!terminal || !titlebar) return;
+
+    // 触屏设备不做拖拽（避免与贪吃蛇滑动、菜单点击冲突）
+    if (window.matchMedia('(hover: none)').matches && 'ontouchstart' in window) return;
+
+    let dragging = false;
+    let startX = 0, startY = 0;
+
+    titlebar.addEventListener('mousedown', function (e) {
+        if (e.target.closest('.dots')) return;
+        if (e.button !== 0) return;
+
+        dragging = true;
+        startX = e.clientX - dragOffset.x;
+        startY = e.clientY - dragOffset.y;
+
+        terminal.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+
+        dragOffset.x = e.clientX - startX;
+        dragOffset.y = e.clientY - startY;
+
+        terminal.style.transform = 'translate(' + dragOffset.x + 'px, ' + dragOffset.y + 'px)';
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (!dragging) return;
+        dragging = false;
+        terminal.classList.remove('dragging');
+        document.body.style.userSelect = '';
+    });
+
+    /* 双击标题栏也复位 */
+    titlebar.addEventListener('dblclick', function (e) {
+        if (e.target.closest('.dots')) return;
+        resetTerminalPos();
+    });
+}
+
+/* ══════════ 归位按钮 ══════════ */
+
+function initResetPosButton() {
+    const btn = document.getElementById('resetPosBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        resetTerminalPos();
+    });
+}
+
 /* ══════════ 游戏按钮 ══════════ */
 
 function initGameButton() {
@@ -174,11 +253,9 @@ function initExitGameButton() {
 /* ══════════ 启动 ══════════ */
 
 async function main() {
-    // ── 0. 显示 loading ──
     initLoading();
     setLoading(4, 'booting...');
 
-    // ── 1. 加载配置 ──
     let config;
     try {
         config = await loadConfig('config.json');
@@ -193,23 +270,19 @@ async function main() {
 
     document.title = config.profile.pageTitle || config.profile.username || 'terminal';
 
-    // ── 2. 渲染静态区域 ──
     renderHero();
     renderFooter();
     renderWindowTitle();
     setLoading(38, 'rendering hero');
 
-    // ── 3. 等头像图片真正加载完 ──
     await preloadImage(config.profile.avatar);
     setLoading(52, 'loading assets');
     await sleep(50);
 
-    // ── 4. 状态栏 ──
     initStatusBar();
     setLoading(64, 'starting shell');
     await sleep(50);
 
-    // ── 5. 主题下拉 ──
     const themeDropdown = document.getElementById('themeDropdown');
     if (themeDropdown) {
         initThemes(themeDropdown);
@@ -219,15 +292,15 @@ async function main() {
     setLoading(74, 'applying theme');
     await sleep(50);
 
-    // ── 6. 背景贪吃蛇 / 交互 ──
     initSnake();
     initMinimize();
+    initWindowDrag();
     initGameButton();
     initExitGameButton();
+    initResetPosButton();
     setLoading(84, 'wiring events');
     await sleep(40);
 
-    // ── 7. 模式切换回调 ──
     const gameBtn = document.getElementById('gameBtn');
     onSnakeModeChange(function (m) {
         if (gameBtn) {
@@ -244,7 +317,6 @@ async function main() {
         }
     });
 
-    // ── 8. 注册命令 + 初始化终端 ──
     registerDefaultCommands();
 
     const screenEl = document.getElementById('screen');
@@ -256,10 +328,8 @@ async function main() {
     setLoading(96, 'initializing shell');
     await sleep(80);
 
-    // ── 9. 全部就绪，淡出 loading ──
     await hideLoading();
 
-    // ── 10. 等 loading 完全消失，再启动终端开场动画 ──
     playIntro(function () {
         startPrompt();
     });
