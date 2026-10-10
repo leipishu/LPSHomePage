@@ -16,6 +16,12 @@ import {
     onSnakeModeChange
 } from './snake.js';
 
+/* ══════════ 环境判断 ══════════ */
+
+function isTouchDevice() {
+    return window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+}
+
 /* ══════════ Loading ══════════ */
 
 let loadingEl = null;
@@ -125,7 +131,7 @@ function initMinimize() {
         if (!minimized) {
             setTimeout(function () {
                 const input = document.querySelector('.input-line input');
-                if (input) input.focus();
+                if (input && !isTouchDevice()) input.focus();
             }, 80);
         }
     }
@@ -177,40 +183,74 @@ function initWindowDrag() {
     const titlebar = document.getElementById('titlebar');
     if (!terminal || !titlebar) return;
 
-    if (window.matchMedia('(hover: none)').matches && 'ontouchstart' in window) return;
-
     let dragging = false;
+    let moved = false;
     let startX = 0, startY = 0;
+    let activeTouchId = null;
 
+    function begin(clientX, clientY) {
+        dragging = true;
+        moved = false;
+        startX = clientX - dragOffset.x;
+        startY = clientY - dragOffset.y;
+        terminal.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+    }
+
+    function move(clientX, clientY) {
+        if (!dragging) return;
+        dragOffset.x = clientX - startX;
+        dragOffset.y = clientY - startY;
+        if (Math.abs(dragOffset.x) > 3 || Math.abs(dragOffset.y) > 3) moved = true;
+        terminal.style.transform = 'translate(' + dragOffset.x + 'px, ' + dragOffset.y + 'px)';
+    }
+
+    function end() {
+        if (!dragging) return;
+        dragging = false;
+        activeTouchId = null;
+        terminal.classList.remove('dragging');
+        document.body.style.userSelect = '';
+    }
+
+    /* ── 鼠标 ── */
     titlebar.addEventListener('mousedown', function (e) {
         if (e.target.closest('.dots')) return;
         if (e.button !== 0) return;
-
-        dragging = true;
-        startX = e.clientX - dragOffset.x;
-        startY = e.clientY - dragOffset.y;
-
-        terminal.classList.add('dragging');
-        document.body.style.userSelect = 'none';
+        begin(e.clientX, e.clientY);
         e.preventDefault();
     });
 
     document.addEventListener('mousemove', function (e) {
-        if (!dragging) return;
-
-        dragOffset.x = e.clientX - startX;
-        dragOffset.y = e.clientY - startY;
-
-        terminal.style.transform = 'translate(' + dragOffset.x + 'px, ' + dragOffset.y + 'px)';
+        if (dragging) move(e.clientX, e.clientY);
     });
 
-    document.addEventListener('mouseup', function () {
-        if (!dragging) return;
-        dragging = false;
-        terminal.classList.remove('dragging');
-        document.body.style.userSelect = '';
-    });
+    document.addEventListener('mouseup', end);
 
+    /* ── 触摸 ── */
+    titlebar.addEventListener('touchstart', function (e) {
+        if (e.target.closest('.dots')) return;
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        activeTouchId = t.identifier;
+        begin(t.clientX, t.clientY);
+    }, { passive: true });
+
+    titlebar.addEventListener('touchmove', function (e) {
+        if (!dragging || activeTouchId === null) return;
+        for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === activeTouchId) {
+                move(e.touches[i].clientX, e.touches[i].clientY);
+                if (e.cancelable) e.preventDefault();
+                return;
+            }
+        }
+    }, { passive: false });
+
+    titlebar.addEventListener('touchend', end);
+    titlebar.addEventListener('touchcancel', end);
+
+    /* 双击标题栏复位（仅桌面） */
     titlebar.addEventListener('dblclick', function (e) {
         if (e.target.closest('.dots')) return;
         resetTerminalPos();
@@ -234,7 +274,7 @@ function initCursorGlow() {
     const el = document.getElementById('cursor-glow');
     if (!el) return;
 
-    if (window.matchMedia('(hover: none)').matches) return;
+    if (isTouchDevice()) return;
 
     let rafId = null;
     let mx = window.innerWidth / 2;
@@ -273,7 +313,7 @@ function initCursorGlow() {
 /* ══════════ 主题化鼠标光标 ══════════ */
 
 function initThemedCursor() {
-    if (window.matchMedia('(hover: none)').matches) return;
+    if (isTouchDevice()) return;
 
     const root = document.documentElement;
 
@@ -417,23 +457,17 @@ async function main() {
     /* ── 功能开关 ── */
     const features = config.features || {};
     const enable = function (name) {
-        // 未声明视为启用；只有显式 false 才关闭
         return features[name] !== false;
     };
 
-    /* 辅助：隐藏某个按钮 */
     function hideEl(id) {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     }
 
-    /* 背景贪吃蛇 */
     initSnake();
-
-    /* 终端最小化（核心 UI，不受开关控制） */
     initMinimize();
 
-    /* 窗口拖拽 —— 关闭时同时隐藏 Reset 按钮 */
     if (enable('windowDrag')) {
         initWindowDrag();
         initResetPosButton();
@@ -441,21 +475,17 @@ async function main() {
         hideEl('resetPosBtn');
     }
 
-    /* 游戏按钮 */
     initGameButton();
     initExitGameButton();
 
-    /* 鼠标跟随光晕 */
     if (enable('cursorGlow')) {
         initCursorGlow();
     }
 
-    /* 主题化鼠标光标 */
     if (enable('themedCursor')) {
         initThemedCursor();
     }
 
-    /* 右键菜单 */
     if (enable('contextMenu')) {
         setContextMenuCallbacks({
             onReset: resetTerminalPos,
@@ -475,7 +505,8 @@ async function main() {
             if (lbl) lbl.textContent = (m === 'ai') ? 'Play' : 'Exit';
         }
 
-        if (m === 'ai') {
+        /* 桌面端退出游戏后把焦点还给输入框；移动端不主动弹键盘 */
+        if (m === 'ai' && !isTouchDevice()) {
             setTimeout(function () {
                 const input = document.querySelector('.input-line input');
                 if (input) input.focus();
@@ -498,6 +529,11 @@ async function main() {
 
     playIntro(function () {
         startPrompt();
+        /* 移动端不自动弹键盘 */
+        if (isTouchDevice()) {
+            const input = document.querySelector('.input-line input');
+            if (input) input.blur();
+        }
     });
 }
 

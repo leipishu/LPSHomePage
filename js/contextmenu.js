@@ -26,7 +26,6 @@ export function setContextMenuCallbacks(cbs) {
 function featureOn(name) {
     const cfg = getConfig();
     const f = (cfg && cfg.features) || {};
-    // 未声明视为启用；只有显式 false 才关闭
     return f[name] !== false;
 }
 
@@ -95,7 +94,6 @@ function buildMenuItems(ctx) {
     const linkEl = ctx.target.closest ? ctx.target.closest('a') : null;
     const isPlaying = document.body.classList.contains('playing');
 
-    /* 游戏中：只显示退出 */
     if (isPlaying) {
         return [
             {
@@ -107,7 +105,6 @@ function buildMenuItems(ctx) {
 
     const list = [];
 
-    /* ── 链接相关 ── */
     if (linkEl) {
         const href = linkEl.href;
         list.push({
@@ -129,7 +126,6 @@ function buildMenuItems(ctx) {
         list.push({ sep: true });
     }
 
-    /* ── 剪贴板组 ── */
     list.push({
         icon: '⧉', label: 'Copy', shortcut: 'Ctrl+C',
         disabled: !hasSel,
@@ -148,7 +144,6 @@ function buildMenuItems(ctx) {
     });
     list.push({ sep: true });
 
-    /* ── 站点操作 ── */
     list.push({
         icon: '◐', label: 'Cycle Theme',
         action: cycleTheme
@@ -161,7 +156,6 @@ function buildMenuItems(ctx) {
         }
     });
 
-    /* Reset 只在 windowDrag 开启时才有意义 */
     if (featureOn('windowDrag')) {
         list.push({
             icon: '↺', label: 'Reset Window Position',
@@ -171,7 +165,6 @@ function buildMenuItems(ctx) {
         });
     }
 
-    /* ── 终端内追加 ── */
     if (inTerminal) {
         list.push({ sep: true });
         list.push({
@@ -189,7 +182,6 @@ function buildMenuItems(ctx) {
         });
     }
 
-    /* ── 信息组 ── */
     list.push({ sep: true });
     list.push({
         icon: '?', label: 'About',
@@ -371,28 +363,99 @@ function onKeyDown(e) {
     }
 }
 
+/* ═══════════ 长按（触屏） ═══════════ */
+
+let longPressTimer = null;
+let longPressX = 0;
+let longPressY = 0;
+let longPressTarget = null;
+let longPressFired = false;
+
+function startLongPress(e) {
+    if (e.touches.length !== 1) return;
+
+    /* 输入框内不弹菜单（用户要的是选中/粘贴） */
+    const tgt = e.target;
+    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA')) return;
+
+    /* 已有选中时忽略（用户在拖动选择手柄） */
+    const sel = window.getSelection();
+    if (sel && sel.toString().length > 0) return;
+
+    const t = e.touches[0];
+    longPressX = t.clientX;
+    longPressY = t.clientY;
+    longPressTarget = tgt;
+    longPressFired = false;
+
+    longPressTimer = setTimeout(function () {
+        longPressTimer = null;
+        longPressFired = true;
+
+        const list = buildMenuItems({ target: longPressTarget });
+        if (!list.length) return;
+
+        /* 触觉反馈 */
+        if (navigator.vibrate) {
+            try { navigator.vibrate(30); } catch (e) { /* ignore */ }
+        }
+
+        openMenu(longPressX, longPressY, list);
+    }, 500);
+}
+
+function cancelLongPressOnMove(e) {
+    if (!longPressTimer) return;
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - longPressX);
+    const dy = Math.abs(t.clientY - longPressY);
+    if (dx > 10 || dy > 10) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+}
+
+function endLongPress(e) {
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+    /* 长按后阻止后续 click，避免误触 */
+    if (longPressFired) {
+        e.preventDefault();
+        longPressFired = false;
+    }
+}
+
 /* ═══════════ 初始化 ═══════════ */
 
 export function initContextMenu() {
-    /* 创建菜单 DOM */
     menuEl = document.createElement('div');
     menuEl.className = 'ctx-menu';
     menuEl.setAttribute('role', 'menu');
     menuEl.setAttribute('aria-hidden', 'true');
     document.body.appendChild(menuEl);
 
-    /* 拦截 contextmenu */
+    /* 桌面右键 */
     document.addEventListener('contextmenu', function (e) {
-        /* Shift + 右键：放行浏览器原生菜单 */
         if (e.shiftKey) return;
-
         e.preventDefault();
-
         const list = buildMenuItems({ target: e.target });
         if (!list.length) return;
-
         openMenu(e.clientX, e.clientY, list);
     });
+
+    /* 触屏长按 */
+    document.addEventListener('touchstart', startLongPress, { passive: true });
+    document.addEventListener('touchmove', cancelLongPressOnMove, { passive: true });
+    document.addEventListener('touchend', endLongPress, { passive: false });
+    document.addEventListener('touchcancel', function () {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+        longPressFired = false;
+    }, { passive: true });
 
     /* 点击外部关闭 */
     document.addEventListener('mousedown', function (e) {
@@ -401,7 +464,13 @@ export function initContextMenu() {
         closeMenu();
     });
 
-    /* 键盘（捕获阶段，优先于终端输入框） */
+    document.addEventListener('touchstart', function (e) {
+        if (!visible) return;
+        if (menuEl.contains(e.target)) return;
+        closeMenu();
+    }, { passive: true });
+
+    /* 键盘 */
     document.addEventListener('keydown', onKeyDown, true);
 
     /* 窗口事件 */
@@ -409,7 +478,7 @@ export function initContextMenu() {
     window.addEventListener('scroll', closeMenu, true);
     window.addEventListener('blur', closeMenu);
 
-    /* 图片拖动禁用 */
+    /* 图片拖拽禁用 */
     document.addEventListener('dragstart', function (e) {
         if (e.target && e.target.nodeName === 'IMG') e.preventDefault();
     });

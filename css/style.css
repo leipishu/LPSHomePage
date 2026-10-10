@@ -1684,6 +1684,126 @@ textarea,
     cursor: var(--cursor-pointer, pointer);
 }
 
+/* ═══════════════════════════════════════
+   移动端适配
+   ═══════════════════════════════════════ */
+
+/* ── 触摸设备：禁止 hover 状态卡住，用 active 状态代替 ── */
+@media (hover: none), (pointer: coarse) {
+
+    /* 触摸滚动更顺滑 */
+    .screen,
+    .panel-body,
+    .theme-menu {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 点击态反馈替代 hover */
+    .action-btn:hover,
+    .theme-trigger:hover,
+    .social-link:hover,
+    .link:hover {
+        transform: none;
+    }
+
+    .action-btn:active,
+    .theme-trigger:active {
+        transform: scale(0.96);
+    }
+
+    /* 可点击区域至少 44px（Apple HIG） */
+    .action-btn {
+        min-height: 40px;
+        min-width: 44px;
+    }
+    .theme-trigger {
+        min-height: 40px;
+    }
+
+    /* 点击高亮颜色由主题决定 */
+    .action-btn,
+    .theme-trigger,
+    .theme-item,
+    .social-link,
+    .link,
+    .footer a,
+    .ctx-item {
+        -webkit-tap-highlight-color: rgba(126, 231, 135, 0.15);
+    }
+
+    /* 允许终端内选中文本 */
+    .screen,
+    .screen * {
+        -webkit-user-select: text;
+        user-select: text;
+        -webkit-touch-callout: none;
+    }
+
+    /* 虚拟方向键使用安全区偏移（适配 iPhone 刘海/圆角） */
+    .dpad {
+        right: calc(12px + env(safe-area-inset-right, 0px));
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* 退出游戏按钮也避让刘海 */
+    .exit-game-btn {
+        top: calc(14px + env(safe-area-inset-top, 0px));
+        right: calc(14px + env(safe-area-inset-right, 0px));
+    }
+
+    /* loading 遮罩内边距适配 */
+    .loading-box {
+        margin-left: env(safe-area-inset-left, 0px);
+        margin-right: env(safe-area-inset-right, 0px);
+    }
+}
+
+/* ── 输入框在 iOS 上避免自动缩放（font-size < 16px 会触发） ── */
+@media (max-width: 720px) {
+    .input-line input {
+        font-size: 16px;
+    }
+
+    /* 屏幕窄时终端内边距收紧，给虚拟按钮留出空间 */
+    .terminal.minimized .screen {
+        padding: 12px 12px 12px;
+    }
+}
+
+/* ── 横屏时终端高度不足，允许更紧凑 ── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero {
+        padding: 0;
+        gap: 4px;
+    }
+    .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    .banner {
+        display: none;
+    }
+    .hero-sign {
+        font-size: 10px;
+        letter-spacing: 1.5px;
+    }
+    .social-link {
+        width: 28px;
+        height: 28px;
+    }
+    .theme-bar {
+        gap: 4px;
+    }
+    .dpad {
+        width: 132px;
+        height: 132px;
+    }
+    .dpad-btn {
+        font-size: 14px;
+    }
+}
+
 /* 触屏设备无需自定义光标 */
 @media (hover: none) {
     html, body,
