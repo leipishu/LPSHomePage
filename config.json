@@ -145,7 +145,7 @@
     ]
   },
   "contact": [
-    { "label": "mail",   "value": "hi@example.com" },
+    { "label": "bilibili",   "value": "https://space.bilibili.com/480887323" },
     { "label": "github", "value": "github.com/leipishu" }
   ],
   "neofetch": {
