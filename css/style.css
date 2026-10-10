@@ -1411,6 +1411,49 @@ body.playing .exit-game-btn {
 .dpad-right { grid-column: 3; grid-row: 2; }
 .dpad-down  { grid-column: 2; grid-row: 3; }
 
+
+/* ═══════════════════════════════════════
+   鼠标跟随光晕
+   ═══════════════════════════════════════ */
+
+#cursor-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+
+    background:
+            radial-gradient(
+                    420px circle at var(--mx, 50%) var(--my, 50%),
+                    var(--glow) 0%,
+                    transparent 62%
+            ),
+            radial-gradient(
+                    900px circle at var(--mx, 50%) var(--my, 50%),
+                    var(--glow2) 0%,
+                    transparent 72%
+            );
+    will-change: background;
+    contain: strict;
+}
+
+#cursor-glow.visible {
+    opacity: 1;
+}
+
+/* 触屏设备隐藏光晕 */
+@media (hover: none) {
+    #cursor-glow { display: none; }
+}
+
+/* 尊重用户的「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+    #cursor-glow { transition: none; }
+}
+
 /* 鼠标精确指针设备：不显示 dpad（即使激活） */
 @media (hover: hover) and (pointer: fine) {
     .dpad.active { display: none; }

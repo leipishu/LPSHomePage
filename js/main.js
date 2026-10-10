@@ -150,10 +150,8 @@ function initMinimize() {
 
 /* ══════════ 终端窗口拖拽 ══════════ */
 
-/* 拖拽偏移量提取到模块级，方便归位按钮复位 */
 const dragOffset = { x: 0, y: 0 };
 
-/** 让终端窗口回到初始位置 */
 export function resetTerminalPos() {
     const terminal = document.getElementById('terminal');
     if (!terminal) return;
@@ -174,7 +172,6 @@ function initWindowDrag() {
     const titlebar = document.getElementById('titlebar');
     if (!terminal || !titlebar) return;
 
-    // 触屏设备不做拖拽（避免与贪吃蛇滑动、菜单点击冲突）
     if (window.matchMedia('(hover: none)').matches && 'ontouchstart' in window) return;
 
     let dragging = false;
@@ -209,7 +206,6 @@ function initWindowDrag() {
         document.body.style.userSelect = '';
     });
 
-    /* 双击标题栏也复位 */
     titlebar.addEventListener('dblclick', function (e) {
         if (e.target.closest('.dots')) return;
         resetTerminalPos();
@@ -224,6 +220,65 @@ function initResetPosButton() {
     btn.addEventListener('click', function (e) {
         e.preventDefault();
         resetTerminalPos();
+    });
+}
+
+/* ══════════ 鼠标跟随光晕 ══════════ */
+
+function initCursorGlow() {
+    const el = document.getElementById('cursor-glow');
+    if (!el) return;
+
+    // 触屏设备无鼠标指针，不启用
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    let rafId = null;
+    let mx = window.innerWidth / 2;
+    let my = window.innerHeight / 2;
+
+    function apply() {
+        rafId = null;
+        el.style.setProperty('--mx', mx + 'px');
+        el.style.setProperty('--my', my + 'px');
+    }
+
+    document.addEventListener('mousemove', function (e) {
+        mx = e.clientX;
+        my = e.clientY;
+
+        if (!el.classList.contains('visible')) {
+            el.classList.add('visible');
+        }
+        if (!rafId) {
+            rafId = requestAnimationFrame(apply);
+        }
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', function () {
+        el.classList.remove('visible');
+    });
+
+    // 页面隐藏时暂停
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden && rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+    });
+}
+
+/* ══════════ 禁用右键菜单 ══════════ */
+
+function initContextMenuBlock() {
+    document.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+    });
+
+    // 顺带屏蔽长按选中文字/图片拖拽，避免移动端弹菜单
+    document.addEventListener('dragstart', function (e) {
+        if (e.target && e.target.nodeName === 'IMG') {
+            e.preventDefault();
+        }
     });
 }
 
@@ -298,6 +353,11 @@ async function main() {
     initGameButton();
     initExitGameButton();
     initResetPosButton();
+
+    /* 新增：鼠标光晕 + 禁用右键 */
+    initCursorGlow();
+    initContextMenuBlock();
+
     setLoading(84, 'wiring events');
     await sleep(40);
 
