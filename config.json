@@ -52,6 +52,12 @@
   ],
   "defaultTheme": "github",
   "storageKey": "leipishu-theme",
+  "features": {
+    "cursorGlow":   true,
+    "themedCursor": true,
+    "contextMenu":  true,
+    "windowDrag":   true
+  },
   "statusBar": {
     "branch": "main",
     "encoding": "UTF-8",

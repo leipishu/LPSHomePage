@@ -21,6 +21,15 @@ export function setContextMenuCallbacks(cbs) {
     Object.assign(callbacks, cbs || {});
 }
 
+/* ═══════════ 功能开关 ═══════════ */
+
+function featureOn(name) {
+    const cfg = getConfig();
+    const f = (cfg && cfg.features) || {};
+    // 未声明视为启用；只有显式 false 才关闭
+    return f[name] !== false;
+}
+
 /* ═══════════ 工具 ═══════════ */
 
 function clickById(id) {
@@ -151,12 +160,16 @@ function buildMenuItems(ctx) {
             else clickById('minBtn');
         }
     });
-    list.push({
-        icon: '↺', label: 'Reset Window Position',
-        action: function () {
-            if (callbacks.onReset) callbacks.onReset();
-        }
-    });
+
+    /* Reset 只在 windowDrag 开启时才有意义 */
+    if (featureOn('windowDrag')) {
+        list.push({
+            icon: '↺', label: 'Reset Window Position',
+            action: function () {
+                if (callbacks.onReset) callbacks.onReset();
+            }
+        });
+    }
 
     /* ── 终端内追加 ── */
     if (inTerminal) {
@@ -171,7 +184,6 @@ function buildMenuItems(ctx) {
         list.push({
             icon: '✕', label: 'Clear Screen',
             action: function () {
-                /* 走终端流程：会打印回显、清屏、重建输入行 */
                 term.runCommand('clear');
             }
         });
