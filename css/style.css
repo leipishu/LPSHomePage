@@ -80,6 +80,53 @@ html[data-theme="solarized"] {
     'Fira Code', Consolas, 'Courier New', monospace;
 }
 
+:root {
+    --mx: 50%;
+    --my: 50%;
+
+    --cursor-default:  default;
+    --cursor-pointer:  pointer;
+    --cursor-text:     text;
+    --cursor-grab:     grab;
+    --cursor-grabbing: grabbing;
+}
+
+/* ═══════════════════════════════════════
+   主题化选中文本
+   ═══════════════════════════════════════ */
+
+::selection {
+    background: var(--accent);
+    color: var(--bg);
+    text-shadow: none;
+}
+
+/* Firefox 老版本 */
+::-moz-selection {
+    background: var(--accent);
+    color: var(--bg);
+    text-shadow: none;
+}
+
+/* 输入框内选中也要跟随主题 */
+input::selection,
+input::-moz-selection,
+textarea::selection,
+textarea::-moz-selection {
+    background: var(--accent);
+    color: var(--bg);
+}
+
+/* 保持终端里的发光文字在选中时也不突兀 */
+.brand::selection,
+.sign::selection,
+.banner::selection,
+.cmd::selection {
+    background: var(--accent);
+    color: var(--bg);
+    text-shadow: none;
+}
+
 /* ═══════════════════════════════════════
    Reset
    ═══════════════════════════════════════ */
@@ -1591,6 +1638,59 @@ body.playing .exit-game-btn {
     margin: 5px 8px;
     background: var(--border);
     opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════
+   主题化鼠标光标
+   ═══════════════════════════════════════ */
+
+html, body {
+    cursor: var(--cursor-default, default);
+}
+
+a,
+area,
+button,
+[role="button"],
+[role="menuitem"],
+.social-link,
+.link,
+.footer a,
+.theme-trigger,
+.theme-item,
+.action-btn,
+.ctx-item,
+.dpad-btn,
+.dot.y,
+.exit-game-btn {
+    cursor: var(--cursor-pointer, pointer);
+}
+
+input,
+textarea,
+.screen {
+    cursor: var(--cursor-text, text);
+}
+
+.titlebar {
+    cursor: var(--cursor-grab, grab);
+}
+
+.terminal.dragging .titlebar {
+    cursor: var(--cursor-grabbing, grabbing);
+}
+
+.terminal.minimized .titlebar {
+    cursor: var(--cursor-pointer, pointer);
+}
+
+/* 触屏设备无需自定义光标 */
+@media (hover: none) {
+    html, body,
+    a, button, [role="button"], [role="menuitem"],
+    .screen, .titlebar {
+        cursor: auto;
+    }
 }
 
 /* ── 触屏设备隐藏（保留原生长按菜单） ── */

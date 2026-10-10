@@ -20,6 +20,11 @@ export function initTerminal({ screen, onCommand, getCommandNames }) {
 
     screenEl.addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('a')) return;
+
+        /* 用户刚拖动选择了文本 → 保留选区，不要抢焦点 */
+        const sel = window.getSelection();
+        if (sel && sel.toString().length > 0) return;
+
         focusInput();
     });
 
@@ -127,7 +132,6 @@ export function runCommand(cmd) {
     const value = String(cmd).trim();
     if (!value) return;
 
-    // 若输入行尚未创建（例如开场动画未结束），退化为直接执行
     if (!inputEl || !inputEl.parentNode) {
         if (onCommandCallback) onCommandCallback(value);
         return;
@@ -163,7 +167,6 @@ function submit(value) {
     print(promptHTML() + '<span class="cmd">' + escapeHTML(value) + '</span>');
     if (onCommandCallback) onCommandCallback(value);
 
-    // 如果命令执行过程中已经重建了输入行（例如 clearScreen），就不重复添加
     if (!screenEl.querySelector('.input-line')) {
         addInputLine();
     }

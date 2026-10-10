@@ -270,6 +270,91 @@ function initCursorGlow() {
     });
 }
 
+/* ══════════ 主题化鼠标光标 ══════════ */
+
+function initThemedCursor() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    const root = document.documentElement;
+
+    function svgURI(body, w, h) {
+        const svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"' +
+            ' viewBox="0 0 ' + w + ' ' + h + '">' + body + '</svg>';
+        return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+    }
+
+    function refresh() {
+        const cs = getComputedStyle(root);
+        const accent = cs.getPropertyValue('--accent').trim() || '#7ee787';
+        const bg     = cs.getPropertyValue('--bg').trim()     || '#05070a';
+        const link   = cs.getPropertyValue('--link').trim()   || '#58a6ff';
+
+        /* ── 默认光标：细线箭头，bg 填充 + accent 描边 ── */
+        const defBody =
+            '<path d="M3 1.5 L3 17.5 L7 13.5 L9.8 19.8 L12.3 18.7 L9.4 12.3 L15.5 12.3 Z" ' +
+            'fill="' + bg + '" stroke="' + accent + '" stroke-width="1.3" ' +
+            'stroke-linejoin="round" stroke-linecap="round"/>' +
+            /* 内部高光，让箭头更有层次 */
+            '<path d="M5.2 5 L5.2 12.5 L7.4 10.4 L9.4 14.8" ' +
+            'fill="none" stroke="' + accent + '" stroke-width="0.6" opacity="0.55"/>';
+        const def = svgURI(defBody, 22, 22) + ' 3 1.5, auto';
+
+        /* ── 指针光标：四角聚焦框 + 中心点 ── */
+        const ptrBody =
+            '<path d="M5 8.5 L5 5 L8.5 5" fill="none" stroke="' + accent +
+            '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path d="M13.5 5 L17 5 L17 8.5" fill="none" stroke="' + accent +
+            '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path d="M17 13.5 L17 17 L13.5 17" fill="none" stroke="' + accent +
+            '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path d="M8.5 17 L5 17 L5 13.5" fill="none" stroke="' + accent +
+            '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<circle cx="11" cy="11" r="1.8" fill="' + accent + '"/>';
+        const ptr = svgURI(ptrBody, 22, 22) + ' 11 11, pointer';
+
+        /* ── 文本光标：I-beam，两端加小横线 ── */
+        const txtBody =
+            '<path d="M9 3.5 L9 18.5" stroke="' + accent +
+            '" stroke-width="1.5" stroke-linecap="round"/>' +
+            '<path d="M6 3.5 L12 3.5" stroke="' + accent +
+            '" stroke-width="1.5" stroke-linecap="round"/>' +
+            '<path d="M6 18.5 L12 18.5" stroke="' + accent +
+            '" stroke-width="1.5" stroke-linecap="round"/>' +
+            '<circle cx="9" cy="11" r="0.9" fill="' + accent + '" opacity="0.6"/>';
+        const txt = svgURI(txtBody, 18, 22) + ' 9 11, text';
+
+        /* ── 抓取：中心方块 + 单环 ── */
+        const grabBody =
+            '<rect x="9.2" y="9.2" width="3.6" height="3.6" rx="0.8" fill="' + accent + '"/>' +
+            '<circle cx="11" cy="11" r="6.5" fill="none" stroke="' + link +
+            '" stroke-width="1.1" opacity="0.75"/>';
+        const grab = svgURI(grabBody, 22, 22) + ' 11 11, grab';
+
+        /* ── 抓取中：中心方块 + 实线环 + 虚线外环 ── */
+        const grabbingBody =
+            '<rect x="9.4" y="9.4" width="3.2" height="3.2" rx="0.6" fill="' + accent + '"/>' +
+            '<circle cx="11" cy="11" r="5.5" fill="none" stroke="' + accent +
+            '" stroke-width="1.3"/>' +
+            '<circle cx="11" cy="11" r="8.5" fill="none" stroke="' + accent +
+            '" stroke-width="0.9" opacity="0.55" stroke-dasharray="2 3"/>';
+        const grabbing = svgURI(grabbingBody, 22, 22) + ' 11 11, grabbing';
+
+        root.style.setProperty('--cursor-default',  def);
+        root.style.setProperty('--cursor-pointer',  ptr);
+        root.style.setProperty('--cursor-text',     txt);
+        root.style.setProperty('--cursor-grab',     grab);
+        root.style.setProperty('--cursor-grabbing', grabbing);
+    }
+
+    refresh();
+
+    new MutationObserver(refresh).observe(root, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+}
+
 /* ══════════ 游戏按钮 ══════════ */
 
 function initGameButton() {
@@ -342,6 +427,7 @@ async function main() {
     initExitGameButton();
     initResetPosButton();
     initCursorGlow();
+    initThemedCursor();
 
     /* 右键菜单：About 走 runCommand 模拟终端输入 */
     setContextMenuCallbacks({
