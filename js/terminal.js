@@ -82,10 +82,26 @@ export function printBeforeInput(html) {
     return d;
 }
 
-/** 清空屏幕 */
+/**
+ * 清空屏幕并重建输入行。
+ * 会保留用户当前未提交的输入内容，避免清屏时把正在打的字一起抹掉。
+ * 若输入行还没建立（例如开场动画尚未结束），则只清空。
+ */
 export function clearScreen() {
-    if (screenEl) screenEl.innerHTML = '';
+    if (!screenEl) return;
+
+    const savedValue = inputEl ? inputEl.value : '';
+
+    screenEl.innerHTML = '';
+    inputEl = null;
     sticky = true;
+
+    addInputLine();
+
+    if (inputEl) {
+        inputEl.value = savedValue;
+        focusInput();
+    }
 }
 
 export function focusInput() {
@@ -100,6 +116,26 @@ export function getScreenEl() {
 /** 获取历史命令副本 */
 export function getHistory() {
     return history.slice();
+}
+
+/**
+ * 模拟用户在终端里敲入一条命令并回车。
+ * 会：移除旧输入行 → 打印 prompt + 命令回显 → 执行 → 建新输入行 → 聚焦。
+ * 用于右键菜单等非键盘触发的场景，保证输出位置和交互一致。
+ */
+export function runCommand(cmd) {
+    const value = String(cmd).trim();
+    if (!value) return;
+
+    // 若输入行尚未创建（例如开场动画未结束），退化为直接执行
+    if (!inputEl || !inputEl.parentNode) {
+        if (onCommandCallback) onCommandCallback(value);
+        return;
+    }
+
+    history.push(value);
+    historyIdx = history.length;
+    submit(value);
 }
 
 function addInputLine() {
@@ -122,11 +158,15 @@ export function startPrompt() {
 function submit(value) {
     const inputLine = inputEl.parentNode;
     inputLine.parentNode.removeChild(inputLine);
+    inputEl = null;
 
     print(promptHTML() + '<span class="cmd">' + escapeHTML(value) + '</span>');
     if (onCommandCallback) onCommandCallback(value);
 
-    addInputLine();
+    // 如果命令执行过程中已经重建了输入行（例如 clearScreen），就不重复添加
+    if (!screenEl.querySelector('.input-line')) {
+        addInputLine();
+    }
     focusInput();
     scrollBottom(true);
 }
@@ -140,6 +180,7 @@ function onKeyDown(e) {
         if (!v.trim()) {
             const line = inputEl.parentNode;
             line.parentNode.removeChild(line);
+            inputEl = null;
             print(promptHTML());
             addInputLine();
             focusInput();
@@ -191,6 +232,7 @@ function onKeyDown(e) {
         } else if (matches.length > 1) {
             const line = inputEl.parentNode;
             line.parentNode.removeChild(line);
+            inputEl = null;
             print(promptHTML() + '<span class="cmd">' + escapeHTML(partial) + '</span>');
             print('<span class="out">' + matches.join('   ') + '</span>');
             addInputLine();
@@ -204,8 +246,6 @@ function onKeyDown(e) {
     if (e.key === 'l' && e.ctrlKey) {
         e.preventDefault();
         clearScreen();
-        addInputLine();
-        focusInput();
         return;
     }
 }

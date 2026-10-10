@@ -1,9 +1,14 @@
 import { loadConfig, getConfig, showConfigError } from './config.js';
-import { initTerminal, startPrompt } from './terminal.js';
+import {
+    initTerminal,
+    startPrompt,
+    runCommand as termRunCommand
+} from './terminal.js';
 import { initThemes } from './themes.js';
 import { renderHero, renderFooter, renderWindowTitle } from './hero.js';
 import { registerDefaultCommands, execute, getCommandNames } from './commands.js';
 import { playIntro } from './intro.js';
+import { initContextMenu, setContextMenuCallbacks } from './contextmenu.js';
 import {
     initSnake,
     startSnakePlayer,
@@ -229,7 +234,6 @@ function initCursorGlow() {
     const el = document.getElementById('cursor-glow');
     if (!el) return;
 
-    // 触屏设备无鼠标指针，不启用
     if (window.matchMedia('(hover: none)').matches) return;
 
     let rafId = null;
@@ -258,26 +262,10 @@ function initCursorGlow() {
         el.classList.remove('visible');
     });
 
-    // 页面隐藏时暂停
     document.addEventListener('visibilitychange', function () {
         if (document.hidden && rafId) {
             cancelAnimationFrame(rafId);
             rafId = null;
-        }
-    });
-}
-
-/* ══════════ 禁用右键菜单 ══════════ */
-
-function initContextMenuBlock() {
-    document.addEventListener('contextmenu', function (e) {
-        e.preventDefault();
-    });
-
-    // 顺带屏蔽长按选中文字/图片拖拽，避免移动端弹菜单
-    document.addEventListener('dragstart', function (e) {
-        if (e.target && e.target.nodeName === 'IMG') {
-            e.preventDefault();
         }
     });
 }
@@ -353,10 +341,14 @@ async function main() {
     initGameButton();
     initExitGameButton();
     initResetPosButton();
-
-    /* 新增：鼠标光晕 + 禁用右键 */
     initCursorGlow();
-    initContextMenuBlock();
+
+    /* 右键菜单：About 走 runCommand 模拟终端输入 */
+    setContextMenuCallbacks({
+        onReset: resetTerminalPos,
+        onAbout: function () { termRunCommand('about'); }
+    });
+    initContextMenu();
 
     setLoading(84, 'wiring events');
     await sleep(40);
