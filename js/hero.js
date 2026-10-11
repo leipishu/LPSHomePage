@@ -19,7 +19,7 @@ export function renderHero() {
     if (sign) sign.textContent = cfg.profile.signature;
 }
 
-/** 渲染页脚（许可证信息） */
+/** 渲染页脚（许可证信息 + GitHub 源码链接） */
 export function renderFooter() {
     const cfg = getConfig();
     const f = cfg.footer || {};
@@ -34,6 +34,22 @@ export function renderFooter() {
     if (linkEl) {
         linkEl.href = f.linkUrl || '#';
         linkEl.textContent = f.linkText || '';
+    }
+
+    /* ── GitHub 源码链接 ── */
+    const ghLink = document.getElementById('footerGithub');
+    if (ghLink) {
+        const repoUrl = (cfg.profile && cfg.profile.repoUrl) || '';
+        if (repoUrl) {
+            ghLink.href = repoUrl;
+        } else {
+            /* 没配 repoUrl 就整个隐藏（连同左侧分隔符） */
+            ghLink.style.display = 'none';
+            const sepBefore = ghLink.previousElementSibling;
+            if (sepBefore && sepBefore.classList.contains('footer-sep')) {
+                sepBefore.style.display = 'none';
+            }
+        }
     }
 }
 

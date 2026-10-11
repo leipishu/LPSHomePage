@@ -7,7 +7,8 @@
     "avatar": "assets/leipishu.jpg",
     "windowTitle": "leipishu@localhost: ~ — bash — {cols}×{rows}",
     "promptUser": "leipishu@localhost",
-    "promptPath": "~"
+    "promptPath": "~",
+    "repoUrl": "https://github.com/leipishu/LPSHomePage"
   },
   "social": [
     { "id": "github",   "label": "GitHub",   "url": "https://github.com/leipishu" },
