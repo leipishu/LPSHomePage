@@ -89,6 +89,15 @@ html[data-theme="solarized"] {
     --cursor-text:     text;
     --cursor-grab:     grab;
     --cursor-grabbing: grabbing;
+
+    --cursor-resize-n:  ns-resize;
+    --cursor-resize-s:  ns-resize;
+    --cursor-resize-e:  ew-resize;
+    --cursor-resize-w:  ew-resize;
+    --cursor-resize-ne: nesw-resize;
+    --cursor-resize-nw: nwse-resize;
+    --cursor-resize-se: nwse-resize;
+    --cursor-resize-sw: nesw-resize;
 }
 
 /* ═══════════════════════════════════════
@@ -1682,6 +1691,300 @@ textarea,
 
 .terminal.minimized .titlebar {
     cursor: var(--cursor-pointer, pointer);
+}
+
+
+/* ═══════════════════════════════════════
+   终端窗口缩放 —— 8 方向手柄
+   ═══════════════════════════════════════ */
+
+.terminal-resize-handle {
+    position: absolute;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+}
+
+/* 四角：可见的 L 形角标 */
+.terminal-resize-nw,
+.terminal-resize-ne,
+.terminal-resize-sw,
+.terminal-resize-se {
+    width: 14px;
+    height: 14px;
+    opacity: 0.45;
+}
+
+/* 四边：纯命中区，不画东西 */
+.terminal-resize-n,
+.terminal-resize-s {
+    left: 12px;
+    right: 12px;
+    height: 6px;
+}
+
+.terminal-resize-e,
+.terminal-resize-w {
+    top: 12px;
+    bottom: 12px;
+    width: 6px;
+}
+
+/* 定位 + 光标（光标颜色由 initThemedCursor 注入） */
+.terminal-resize-n  { top: 0;    cursor: var(--cursor-resize-n, ns-resize); }
+.terminal-resize-s  { bottom: 0; cursor: var(--cursor-resize-s, ns-resize); }
+.terminal-resize-e  { right: 0;  cursor: var(--cursor-resize-e, ew-resize); }
+.terminal-resize-w  { left: 0;   cursor: var(--cursor-resize-w, ew-resize); }
+
+.terminal-resize-nw {
+    top: 0; left: 0;
+    cursor: var(--cursor-resize-nw, nwse-resize);
+    border-top: 2px solid var(--muted);
+    border-left: 2px solid var(--muted);
+    border-radius: 10px 0 0 0;
+}
+.terminal-resize-ne {
+    top: 0; right: 0;
+    cursor: var(--cursor-resize-ne, nesw-resize);
+    border-top: 2px solid var(--muted);
+    border-right: 2px solid var(--muted);
+    border-radius: 0 10px 0 0;
+}
+.terminal-resize-sw {
+    bottom: 0; left: 0;
+    cursor: var(--cursor-resize-sw, nesw-resize);
+    border-bottom: 2px solid var(--muted);
+    border-left: 2px solid var(--muted);
+    border-radius: 0 0 0 10px;
+}
+.terminal-resize-se {
+    bottom: 0; right: 0;
+    cursor: var(--cursor-resize-se, nwse-resize);
+    border-bottom: 2px solid var(--muted);
+    border-right: 2px solid var(--muted);
+    border-radius: 0 0 10px 0;
+}
+
+.terminal-resize-nw:hover,
+.terminal-resize-ne:hover,
+.terminal-resize-sw:hover,
+.terminal-resize-se:hover {
+    opacity: 1;
+    border-color: var(--accent);
+}
+
+/* 缩放中：关掉过渡，跟手才顺 */
+.terminal.resizing {
+    transition: none !important;
+    user-select: none;
+}
+
+/* 最小化时不显示手柄 */
+.terminal.minimized .terminal-resize-handle {
+    display: none;
+}
+
+/* 触屏：放大命中区 */
+@media (hover: none), (pointer: coarse) {
+    .terminal-resize-nw,
+    .terminal-resize-ne,
+    .terminal-resize-sw,
+    .terminal-resize-se {
+        width: 18px;
+        height: 18px;
+        opacity: 0.55;
+    }
+}
+
+/* ═══════════════════════════════════════
+   终端离屏提示
+   ═══════════════════════════════════════ */
+
+.offscreen-tip {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 250;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px 10px 16px;
+    border-radius: 11px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.3px;
+    box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.5),
+            0 16px 40px rgba(0, 0, 0, 0.6),
+            var(--shadow);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.26s ease, transform 0.26s ease;
+}
+
+.offscreen-tip.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.offscreen-tip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(255, 95, 87, 0.15);
+    color: #ff5f57;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.offscreen-tip-text {
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.offscreen-tip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    outline: none;
+    transition: color 0.2s ease, border-color 0.2s ease,
+    background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.offscreen-tip-btn:hover {
+    border-color: var(--accent);
+    background: var(--hover-bg);
+    box-shadow: 0 0 18px var(--glow2);
+}
+
+.offscreen-tip-btn:active {
+    transform: scale(0.96);
+}
+
+/* 触屏：按钮更大、位置更靠上避免被 dpad 遮 */
+@media (hover: none), (pointer: coarse) {
+    .offscreen-tip {
+        bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        padding: 11px 14px 11px 16px;
+    }
+    .offscreen-tip-btn {
+        min-height: 36px;
+        padding: 6px 14px;
+    }
+}
+
+/* ═══════════════════════════════════════
+   移动端适配：标题栏 + 离屏提示
+   ═══════════════════════════════════════ */
+
+/* ── 窄屏：收紧标题栏，给「cols×rows」留出更多空间 ── */
+@media (max-width: 480px) {
+    .titlebar {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+    .dots { gap: 6px; }
+    .dot  { width: 9px; height: 9px; }
+    .title {
+        font-size: 10px;
+        letter-spacing: 0.2px;
+    }
+    .title-spacer { width: 30px; }
+}
+
+/* ── 极窄屏（iPhone SE 等）：再缩一档，别让 cols×rows 被截掉 ── */
+@media (max-width: 380px) {
+    .titlebar {
+        padding: 7px 8px;
+        gap: 6px;
+    }
+    .dots { gap: 5px; }
+    .dot  { width: 8px; height: 8px; }
+    .title { font-size: 9.5px; }
+    .title-spacer { width: 22px; }
+}
+
+/* ── 触屏窄屏：离屏提示铺满宽度，避免文字换行 ── */
+@media (hover: none) and (max-width: 480px),
+(pointer: coarse) and (max-width: 480px) {
+    .offscreen-tip {
+        left: 12px;
+        right: 12px;
+        transform: translateY(20px);
+        justify-content: space-between;
+    }
+    .offscreen-tip.visible {
+        transform: translateY(0);
+    }
+    .offscreen-tip-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+    }
+}
+
+/* ── 横屏短屏（手机横屏）：提示贴底会太挤，往上提一点 ── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .offscreen-tip {
+        bottom: 12px;
+        padding: 8px 12px 8px 14px;
+        font-size: 11.5px;
+    }
+    .offscreen-tip-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+}
+
+/* ── 横屏触屏：dpad 在右下，提示移去顶部，别打架 ── */
+@media (max-height: 500px) and (orientation: landscape) and (hover: none),
+(max-height: 500px) and (orientation: landscape) and (pointer: coarse) {
+    .offscreen-tip {
+        bottom: auto;
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        transform: translateX(-50%) translateY(-20px);
+    }
+    .offscreen-tip.visible {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ── 触屏拖拽标题栏：禁用系统滚动 / 长按选中，拖动更顺 ── */
+.titlebar {
+    touch-action: none;
+}
+
+/* ── 触屏状态栏：极小屏下再收一档，别把时钟挤没 ── */
+@media (max-width: 380px) {
+    .status-bar {
+        font-size: 9.5px;
+        padding: 3px 8px;
+        gap: 6px;
+    }
+    .sb-sep { font-size: 9px; }
 }
 
 /* ═══════════════════════════════════════
